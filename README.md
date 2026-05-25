@@ -32,18 +32,18 @@ GitHub Pages must be enabled manually in the repository settings:
 3. Set the branch to **`gh-pages`** and folder to **`/ (root)`**
 4. Click **Save**
 
-After the first GitHub Actions deployment runs (triggered by any push to `main` that touches `flip-seven/**`), the site will be live at:
+After the first GitHub Actions deployment runs (triggered by any push to `main`), the site will be live at:
 
 ```
-https://sraja7272.github.io/Raja-Server-Projects/
+https://sraja7272.github.io/Flip-Seven-Score-Tracker/
 ```
 
 ### Automated Deployments (via GitHub Actions)
 
 | Trigger | Deploys to | URL |
 |---|---|---|
-| Push to `main` (any `flip-seven/**` file) | `gh-pages` root | `/` — production |
-| Pull request opened or updated | `gh-pages/dev/` | `/dev/` — PR preview |
+| Push to `main` | `gh-pages` root | https://sraja7272.github.io/Flip-Seven-Score-Tracker/ |
+| Pull request opened or updated | `gh-pages/dev/` | https://sraja7272.github.io/Flip-Seven-Score-Tracker/dev/ |
 
 The PR workflow also posts a comment on the pull request with the preview URL.
 
