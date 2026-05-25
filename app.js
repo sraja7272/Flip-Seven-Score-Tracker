@@ -147,13 +147,18 @@ function startGame() {
 }
 
 // ── Scoring ───────────────────────────────────────────────────────────────────
-function renderScoring() {
+function renderScoring(prefill = []) {
   const rows = state.players.map((p, i) => `
     <div class="score-row score-anim" style="transition-delay:${i * 50}ms">
       <span class="player-label">${escHtml(p.name)}</span>
       <span class="current-total">${p.totalScore} pts</span>
+      <label class="bust-label" title="Player busted — score 0 this round">
+        <input type="checkbox" class="bust-check" id="bust-${i}" />
+        <span class="bust-text">Bust</span>
+      </label>
       <input class="input score-input" type="number" min="0" max="999"
-             placeholder="Score" id="score-${i}" inputmode="numeric" />
+             placeholder="Score" id="score-${i}" inputmode="numeric"
+             value="${prefill[i] !== undefined ? prefill[i] : ''}" />
     </div>
   `).join('');
 
@@ -169,12 +174,41 @@ function renderScoring() {
       <p class="text-muted" style="margin-bottom:20px">Enter each player's score for this round.</p>
       <div id="score-rows">${rows}</div>
       <div class="mt-24">
-        <button class="btn btn-primary" style="width:100%" id="submit-scores-btn">Submit Scores →</button>
+        <button class="btn btn-primary" style="width:100%" id="submit-scores-btn" disabled>Submit Scores →</button>
       </div>
     </div>
   `);
 
-  document.getElementById('submit-scores-btn').addEventListener('click', submitScores);
+  const submitBtn = document.getElementById('submit-scores-btn');
+
+  function updateSubmitButton() {
+    const allFilled = state.players.every((_, i) => {
+      const busted = document.getElementById(`bust-${i}`).checked;
+      const val = document.getElementById(`score-${i}`).value.trim();
+      return busted || val !== '';
+    });
+    submitBtn.disabled = !allFilled;
+  }
+
+  state.players.forEach((_, i) => {
+    const checkbox = document.getElementById(`bust-${i}`);
+    const scoreInput = document.getElementById(`score-${i}`);
+
+    checkbox.addEventListener('change', () => {
+      if (checkbox.checked) {
+        scoreInput.value = '';
+        scoreInput.disabled = true;
+      } else {
+        scoreInput.disabled = false;
+        scoreInput.focus();
+      }
+      updateSubmitButton();
+    });
+
+    scoreInput.addEventListener('input', updateSubmitButton);
+  });
+
+  submitBtn.addEventListener('click', submitScores);
   document.getElementById('new-game-btn').addEventListener('click', confirmNewGame);
 
   // Animate rows in
@@ -188,10 +222,13 @@ function renderScoring() {
     inp.addEventListener('keydown', e => {
       if (e.key === 'Enter') {
         if (i < inputs.length - 1) inputs[i + 1].focus();
-        else document.getElementById('submit-scores-btn').click();
+        else submitBtn.click();
       }
     });
   });
+
+  // Trigger initial submit button state (handles prefill case)
+  updateSubmitButton();
 
   if (inputs.length > 0) inputs[0].focus();
 }
@@ -199,12 +236,11 @@ function renderScoring() {
 function submitScores() {
   const scores = [];
   for (let i = 0; i < state.players.length; i++) {
-    const val = document.getElementById(`score-${i}`).value.trim();
-    if (val === '') {
-      document.getElementById(`score-${i}`).focus();
-      showError('Enter a score for every player (use 0 for a bust).');
-      return;
+    if (document.getElementById(`bust-${i}`).checked) {
+      scores.push(0);
+      continue;
     }
+    const val = document.getElementById(`score-${i}`).value.trim();
     const n = parseInt(val, 10);
     if (isNaN(n) || n < 0) {
       document.getElementById(`score-${i}`).focus();
@@ -277,6 +313,7 @@ function renderLeaderboard() {
       </table>
       <div class="mt-24 text-center stack-sm">
         ${actionHTML}
+        <button class="btn-edit-scores" id="edit-scores-btn">← Edit scores for this round</button>
       </div>
     </div>
   `);
@@ -295,11 +332,24 @@ function renderLeaderboard() {
     });
   }
 
+  document.getElementById('edit-scores-btn').addEventListener('click', editLastRound);
   document.getElementById('new-game-btn').addEventListener('click', confirmNewGame);
 
   requestAnimationFrame(() => {
     document.querySelectorAll('.score-anim').forEach(el => el.classList.add('visible'));
   });
+}
+
+function editLastRound() {
+  const prefill = state.players.map(p => {
+    const lastScore = p.roundScores.pop();
+    p.totalScore -= lastScore;
+    return lastScore;
+  });
+  state.currentRound -= 1;
+  state.phase = 'scoring';
+  saveState(state);
+  renderScoring(prefill);
 }
 
 function findWinners(sortedPlayers) {
