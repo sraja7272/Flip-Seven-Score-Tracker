@@ -18,8 +18,14 @@
   --shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
 }
 
-html, body {
+html {
   height: 100%;
+  overflow: hidden;
+}
+
+body {
+  height: 100%;
+  overflow-y: auto;
   background: var(--bg);
   color: var(--text);
   font-family: 'Inter', system-ui, sans-serif;
@@ -28,7 +34,7 @@ html, body {
 }
 
 #app {
-  min-height: 100vh;
+  min-height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
