@@ -155,6 +155,7 @@ h3 {
 .btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 /* ── Layout helpers ── */
