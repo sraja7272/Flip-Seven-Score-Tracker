@@ -147,7 +147,7 @@ function startGame() {
 }
 
 // ── Scoring ───────────────────────────────────────────────────────────────────
-function renderScoring() {
+function renderScoring(prefill = []) {
   const rows = state.players.map((p, i) => `
     <div class="score-row score-anim" style="transition-delay:${i * 50}ms">
       <span class="player-label">${escHtml(p.name)}</span>
@@ -157,7 +157,8 @@ function renderScoring() {
         <span class="bust-text">Bust</span>
       </label>
       <input class="input score-input" type="number" min="0" max="999"
-             placeholder="Score" id="score-${i}" inputmode="numeric" />
+             placeholder="Score" id="score-${i}" inputmode="numeric"
+             value="${prefill[i] !== undefined ? prefill[i] : ''}" />
     </div>
   `).join('');
 
@@ -225,6 +226,9 @@ function renderScoring() {
       }
     });
   });
+
+  // Trigger initial submit button state (handles prefill case)
+  updateSubmitButton();
 
   if (inputs.length > 0) inputs[0].focus();
 }
@@ -337,14 +341,15 @@ function renderLeaderboard() {
 }
 
 function editLastRound() {
-  state.players.forEach(p => {
+  const prefill = state.players.map(p => {
     const lastScore = p.roundScores.pop();
     p.totalScore -= lastScore;
+    return lastScore;
   });
   state.currentRound -= 1;
   state.phase = 'scoring';
   saveState(state);
-  renderScoring();
+  renderScoring(prefill);
 }
 
 function findWinners(sortedPlayers) {
