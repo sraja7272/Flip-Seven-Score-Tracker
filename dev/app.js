@@ -309,6 +309,7 @@ function renderLeaderboard() {
       </table>
       <div class="mt-24 text-center stack-sm">
         ${actionHTML}
+        <button class="btn-edit-scores" id="edit-scores-btn">← Edit scores for this round</button>
       </div>
     </div>
   `);
@@ -327,11 +328,23 @@ function renderLeaderboard() {
     });
   }
 
+  document.getElementById('edit-scores-btn').addEventListener('click', editLastRound);
   document.getElementById('new-game-btn').addEventListener('click', confirmNewGame);
 
   requestAnimationFrame(() => {
     document.querySelectorAll('.score-anim').forEach(el => el.classList.add('visible'));
   });
+}
+
+function editLastRound() {
+  state.players.forEach(p => {
+    const lastScore = p.roundScores.pop();
+    p.totalScore -= lastScore;
+  });
+  state.currentRound -= 1;
+  state.phase = 'scoring';
+  saveState(state);
+  renderScoring();
 }
 
 function findWinners(sortedPlayers) {
