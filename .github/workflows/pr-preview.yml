@@ -1,0 +1,77 @@
+name: Deploy Flip Seven (PR preview)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'index.html'
+      - 'style.css'
+      - 'app.js'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+
+      - name: Prepare dev deploy directory
+        run: |
+          mkdir -p _deploy/dev
+          cp index.html _deploy/dev/
+          cp style.css  _deploy/dev/
+          cp app.js     _deploy/dev/
+
+      - name: Checkout gh-pages and preserve production files
+        run: |
+          git fetch origin gh-pages || true
+          if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
+            git worktree add _gh-pages origin/gh-pages
+            for f in index.html style.css app.js; do
+              if [ -f "_gh-pages/$f" ]; then
+                cp "_gh-pages/$f" "_deploy/$f"
+              fi
+            done
+          fi
+
+      - name: Deploy preview to gh-pages/dev
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: _deploy
+          publish_branch: gh-pages
+          force_orphan: false
+          keep_files: false
+          commit_message: 'deploy: PR #${{ github.event.pull_request.number }} preview from ${{ github.sha }}'
+
+      - name: Post preview URL comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const url = `https://sraja7272.github.io/flip-seven/dev/`;
+            const body = `### 🃏 Flip Seven Preview Deployed\n\n**Preview URL:** ${url}\n\n> This preview is updated on every push to this PR.`;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body.includes('Flip Seven Preview Deployed'));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }

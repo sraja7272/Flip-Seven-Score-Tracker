@@ -1,0 +1,47 @@
+name: Deploy Flip Seven (production)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'index.html'
+      - 'style.css'
+      - 'app.js'
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare deploy directory
+        run: |
+          mkdir -p _deploy
+          cp index.html _deploy/
+          cp style.css  _deploy/
+          cp app.js     _deploy/
+
+      - name: Checkout gh-pages branch (preserve /dev)
+        run: |
+          git fetch origin gh-pages || true
+          if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
+            git worktree add _gh-pages origin/gh-pages
+            if [ -d "_gh-pages/dev" ]; then
+              cp -r _gh-pages/dev _deploy/dev
+            fi
+          fi
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: _deploy
+          publish_branch: gh-pages
+          force_orphan: false
+          keep_files: false
+          commit_message: 'deploy: production build from ${{ github.sha }}'
