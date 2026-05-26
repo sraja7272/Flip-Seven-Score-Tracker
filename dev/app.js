@@ -179,7 +179,7 @@ function renderScoring(prefill = []) {
       <div id="score-rows">${rows}</div>
       <div class="mt-24">
         <button class="btn btn-primary" style="width:100%" id="submit-scores-btn" disabled>Submit Scores →</button>
-        ${state.currentRound > 1 ? '<button class="btn-edit-scores" id="back-to-lb-btn">← Last round\'s leaderboard</button>' : ''}
+        ${state.currentRound > 1 ? '<div class="text-center"><button class="btn-edit-scores" id="back-to-lb-btn">← Last round\'s leaderboard</button></div>' : ''}
       </div>
     </div>
   `);
