@@ -148,17 +148,21 @@ function startGame() {
 
 // ── Scoring ───────────────────────────────────────────────────────────────────
 function renderScoring(prefill = []) {
-  const rows = state.players.map((p, i) => `
-    <div class="score-row score-anim" style="transition-delay:${i * 50}ms">
+  const sorted = state.players
+    .map((p, i) => ({ ...p, origIndex: i }))
+    .sort((a, b) => b.totalScore - a.totalScore);
+
+  const rows = sorted.map((p, displayIdx) => `
+    <div class="score-row score-anim" style="transition-delay:${displayIdx * 50}ms">
       <span class="player-label">${escHtml(p.name)}</span>
-      <span class="current-total">${p.totalScore} pts</span>
+      <span class="current-total" id="total-${p.origIndex}" data-base="${p.totalScore}">${p.totalScore} pts</span>
       <label class="bust-label" title="Player busted — score 0 this round">
-        <input type="checkbox" class="bust-check" id="bust-${i}" />
+        <input type="checkbox" class="bust-check" id="bust-${p.origIndex}" />
         <span class="bust-text">Bust</span>
       </label>
       <input class="input score-input" type="number" min="0" max="999"
-             placeholder="Score" id="score-${i}" inputmode="numeric"
-             value="${prefill[i] !== undefined ? prefill[i] : ''}" />
+             placeholder="Score" id="score-${p.origIndex}" inputmode="numeric"
+             value="${prefill[p.origIndex] !== undefined ? prefill[p.origIndex] : ''}" />
     </div>
   `).join('');
 
@@ -190,6 +194,25 @@ function renderScoring(prefill = []) {
     submitBtn.disabled = !allFilled;
   }
 
+  function updateLiveTotal(i) {
+    const totalEl = document.getElementById(`total-${i}`);
+    const base = parseInt(totalEl.dataset.base, 10);
+    const busted = document.getElementById(`bust-${i}`).checked;
+    const val = document.getElementById(`score-${i}`).value.trim();
+    const n = parseInt(val, 10);
+
+    if (busted) {
+      totalEl.textContent = `${base} pts`;
+      totalEl.classList.remove('total-preview');
+    } else if (!isNaN(n) && n >= 0) {
+      totalEl.textContent = `${base + n} pts`;
+      totalEl.classList.add('total-preview');
+    } else {
+      totalEl.textContent = `${base} pts`;
+      totalEl.classList.remove('total-preview');
+    }
+  }
+
   state.players.forEach((_, i) => {
     const checkbox = document.getElementById(`bust-${i}`);
     const scoreInput = document.getElementById(`score-${i}`);
@@ -202,10 +225,14 @@ function renderScoring(prefill = []) {
         scoreInput.disabled = false;
         scoreInput.focus();
       }
+      updateLiveTotal(i);
       updateSubmitButton();
     });
 
-    scoreInput.addEventListener('input', updateSubmitButton);
+    scoreInput.addEventListener('input', () => {
+      updateLiveTotal(i);
+      updateSubmitButton();
+    });
   });
 
   submitBtn.addEventListener('click', submitScores);
@@ -227,7 +254,8 @@ function renderScoring(prefill = []) {
     });
   });
 
-  // Trigger initial submit button state (handles prefill case)
+  // Trigger initial state (handles prefill case)
+  state.players.forEach((_, i) => updateLiveTotal(i));
   updateSubmitButton();
 
   if (inputs.length > 0) inputs[0].focus();
@@ -255,9 +283,17 @@ function submitScores() {
     p.totalScore += scores[i];
   });
   state.currentRound += 1;
-  state.phase = 'leaderboard';
-  saveState(state);
-  renderLeaderboard();
+
+  const winners = findWinners([...state.players].sort((a, b) => b.totalScore - a.totalScore));
+  if (winners.length > 0) {
+    state.phase = 'gameover';
+    saveState(state);
+    renderGameOver();
+  } else {
+    state.phase = 'leaderboard';
+    saveState(state);
+    renderLeaderboard();
+  }
 }
 
 // ── Leaderboard ───────────────────────────────────────────────────────────────
@@ -291,9 +327,7 @@ function renderLeaderboard() {
     `;
   }).join('');
 
-  const actionHTML = winners.length > 0
-    ? `<button class="btn btn-primary btn-lg" id="see-winner-btn">See Winner 🎉</button>`
-    : `<button class="btn btn-primary" id="next-round-btn">Start Round ${state.currentRound} →</button>`;
+  const actionHTML = `<button class="btn btn-primary" id="next-round-btn">Start Round ${state.currentRound} →</button>`;
 
   setApp(`
     <div class="card card-wide screen">
@@ -318,19 +352,11 @@ function renderLeaderboard() {
     </div>
   `);
 
-  if (winners.length > 0) {
-    document.getElementById('see-winner-btn').addEventListener('click', () => {
-      state.phase = 'gameover';
-      saveState(state);
-      renderGameOver();
-    });
-  } else {
-    document.getElementById('next-round-btn').addEventListener('click', () => {
-      state.phase = 'scoring';
-      saveState(state);
-      renderScoring();
-    });
-  }
+  document.getElementById('next-round-btn').addEventListener('click', () => {
+    state.phase = 'scoring';
+    saveState(state);
+    renderScoring();
+  });
 
   document.getElementById('edit-scores-btn').addEventListener('click', editLastRound);
   document.getElementById('new-game-btn').addEventListener('click', confirmNewGame);
