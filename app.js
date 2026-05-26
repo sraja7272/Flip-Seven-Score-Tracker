@@ -283,9 +283,17 @@ function submitScores() {
     p.totalScore += scores[i];
   });
   state.currentRound += 1;
-  state.phase = 'leaderboard';
-  saveState(state);
-  renderLeaderboard();
+
+  const winners = findWinners([...state.players].sort((a, b) => b.totalScore - a.totalScore));
+  if (winners.length > 0) {
+    state.phase = 'gameover';
+    saveState(state);
+    renderGameOver();
+  } else {
+    state.phase = 'leaderboard';
+    saveState(state);
+    renderLeaderboard();
+  }
 }
 
 // ── Leaderboard ───────────────────────────────────────────────────────────────
@@ -319,9 +327,7 @@ function renderLeaderboard() {
     `;
   }).join('');
 
-  const actionHTML = winners.length > 0
-    ? `<button class="btn btn-primary btn-lg" id="see-winner-btn">See Winner 🎉</button>`
-    : `<button class="btn btn-primary" id="next-round-btn">Start Round ${state.currentRound} →</button>`;
+  const actionHTML = `<button class="btn btn-primary" id="next-round-btn">Start Round ${state.currentRound} →</button>`;
 
   setApp(`
     <div class="card card-wide screen">
@@ -346,19 +352,11 @@ function renderLeaderboard() {
     </div>
   `);
 
-  if (winners.length > 0) {
-    document.getElementById('see-winner-btn').addEventListener('click', () => {
-      state.phase = 'gameover';
-      saveState(state);
-      renderGameOver();
-    });
-  } else {
-    document.getElementById('next-round-btn').addEventListener('click', () => {
-      state.phase = 'scoring';
-      saveState(state);
-      renderScoring();
-    });
-  }
+  document.getElementById('next-round-btn').addEventListener('click', () => {
+    state.phase = 'scoring';
+    saveState(state);
+    renderScoring();
+  });
 
   document.getElementById('edit-scores-btn').addEventListener('click', editLastRound);
   document.getElementById('new-game-btn').addEventListener('click', confirmNewGame);
