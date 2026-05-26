@@ -179,6 +179,7 @@ function renderScoring(prefill = []) {
       <div id="score-rows">${rows}</div>
       <div class="mt-24">
         <button class="btn btn-primary" style="width:100%" id="submit-scores-btn" disabled>Submit Scores →</button>
+        ${state.currentRound > 1 ? '<button class="btn-edit-scores" id="back-to-lb-btn">← Last round\'s leaderboard</button>' : ''}
       </div>
     </div>
   `);
@@ -237,6 +238,9 @@ function renderScoring(prefill = []) {
 
   submitBtn.addEventListener('click', submitScores);
   document.getElementById('new-game-btn').addEventListener('click', confirmNewGame);
+  if (state.currentRound > 1) {
+    document.getElementById('back-to-lb-btn').addEventListener('click', renderLeaderboard);
+  }
 
   // Animate rows in
   requestAnimationFrame(() => {
