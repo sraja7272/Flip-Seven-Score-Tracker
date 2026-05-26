@@ -363,6 +363,12 @@ h3 {
   color: var(--text-muted);
   min-width: 60px;
   text-align: right;
+  transition: color 0.15s;
+}
+
+.score-row .current-total.total-preview {
+  color: var(--gold);
+  font-weight: 600;
 }
 
 .score-row .score-input {
