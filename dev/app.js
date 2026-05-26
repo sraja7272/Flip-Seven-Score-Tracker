@@ -155,7 +155,7 @@ function renderScoring(prefill = []) {
   const rows = sorted.map((p, displayIdx) => `
     <div class="score-row score-anim" style="transition-delay:${displayIdx * 50}ms">
       <span class="player-label">${escHtml(p.name)}</span>
-      <span class="current-total">${p.totalScore} pts</span>
+      <span class="current-total" id="total-${p.origIndex}" data-base="${p.totalScore}">${p.totalScore} pts</span>
       <label class="bust-label" title="Player busted — score 0 this round">
         <input type="checkbox" class="bust-check" id="bust-${p.origIndex}" />
         <span class="bust-text">Bust</span>
@@ -194,6 +194,25 @@ function renderScoring(prefill = []) {
     submitBtn.disabled = !allFilled;
   }
 
+  function updateLiveTotal(i) {
+    const totalEl = document.getElementById(`total-${i}`);
+    const base = parseInt(totalEl.dataset.base, 10);
+    const busted = document.getElementById(`bust-${i}`).checked;
+    const val = document.getElementById(`score-${i}`).value.trim();
+    const n = parseInt(val, 10);
+
+    if (busted) {
+      totalEl.textContent = `${base} pts`;
+      totalEl.classList.remove('total-preview');
+    } else if (!isNaN(n) && n >= 0) {
+      totalEl.textContent = `${base + n} pts`;
+      totalEl.classList.add('total-preview');
+    } else {
+      totalEl.textContent = `${base} pts`;
+      totalEl.classList.remove('total-preview');
+    }
+  }
+
   state.players.forEach((_, i) => {
     const checkbox = document.getElementById(`bust-${i}`);
     const scoreInput = document.getElementById(`score-${i}`);
@@ -206,10 +225,14 @@ function renderScoring(prefill = []) {
         scoreInput.disabled = false;
         scoreInput.focus();
       }
+      updateLiveTotal(i);
       updateSubmitButton();
     });
 
-    scoreInput.addEventListener('input', updateSubmitButton);
+    scoreInput.addEventListener('input', () => {
+      updateLiveTotal(i);
+      updateSubmitButton();
+    });
   });
 
   submitBtn.addEventListener('click', submitScores);
@@ -231,7 +254,8 @@ function renderScoring(prefill = []) {
     });
   });
 
-  // Trigger initial submit button state (handles prefill case)
+  // Trigger initial state (handles prefill case)
+  state.players.forEach((_, i) => updateLiveTotal(i));
   updateSubmitButton();
 
   if (inputs.length > 0) inputs[0].focus();
