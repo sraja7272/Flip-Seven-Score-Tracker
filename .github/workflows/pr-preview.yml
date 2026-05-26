@@ -7,6 +7,9 @@ on:
       - 'index.html'
       - 'style.css'
       - 'app.js'
+      - 'manifest.json'
+      - 'sw.js'
+      - 'icons/**'
 
 permissions:
   contents: write
@@ -22,20 +25,26 @@ jobs:
       - name: Prepare dev deploy directory
         run: |
           mkdir -p _deploy/dev
-          cp index.html _deploy/dev/
-          cp style.css  _deploy/dev/
-          cp app.js     _deploy/dev/
+          cp index.html    _deploy/dev/
+          cp style.css     _deploy/dev/
+          cp app.js        _deploy/dev/
+          cp manifest.json _deploy/dev/
+          cp sw.js         _deploy/dev/
+          cp -r icons      _deploy/dev/
 
       - name: Checkout gh-pages and preserve production files
         run: |
           git fetch origin gh-pages || true
           if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
             git worktree add _gh-pages origin/gh-pages
-            for f in index.html style.css app.js; do
+            for f in index.html style.css app.js manifest.json sw.js; do
               if [ -f "_gh-pages/$f" ]; then
                 cp "_gh-pages/$f" "_deploy/$f"
               fi
             done
+            if [ -d "_gh-pages/icons" ]; then
+              cp -r _gh-pages/icons _deploy/icons
+            fi
           fi
 
       - name: Deploy preview to gh-pages/dev

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Maskable safe zone: content within inner 80% (51px padding each side) -->
+  <rect width="512" height="512" fill="#0d0d1a"/>
+  <rect x="56" y="56" width="400" height="400" rx="52" fill="#1a1a2e" stroke="#f5c518" stroke-width="10"/>
+  <!-- Top-left 7 -->
+  <text x="96" y="158" font-family="Georgia,serif" font-size="88" font-weight="bold" fill="#f5c518">7</text>
+  <!-- Centre large 7 -->
+  <text x="256" y="330" font-family="Georgia,serif" font-size="220" font-weight="bold" fill="#f5c518" text-anchor="middle">7</text>
+  <!-- Bottom-right 7 (rotated) -->
+  <text x="416" y="370" font-family="Georgia,serif" font-size="88" font-weight="bold" fill="#f5c518" text-anchor="middle" transform="rotate(180,416,370)">7</text>
+</svg>
