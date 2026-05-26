@@ -148,17 +148,21 @@ function startGame() {
 
 // ── Scoring ───────────────────────────────────────────────────────────────────
 function renderScoring(prefill = []) {
-  const rows = state.players.map((p, i) => `
-    <div class="score-row score-anim" style="transition-delay:${i * 50}ms">
+  const sorted = state.players
+    .map((p, i) => ({ ...p, origIndex: i }))
+    .sort((a, b) => b.totalScore - a.totalScore);
+
+  const rows = sorted.map((p, displayIdx) => `
+    <div class="score-row score-anim" style="transition-delay:${displayIdx * 50}ms">
       <span class="player-label">${escHtml(p.name)}</span>
       <span class="current-total">${p.totalScore} pts</span>
       <label class="bust-label" title="Player busted — score 0 this round">
-        <input type="checkbox" class="bust-check" id="bust-${i}" />
+        <input type="checkbox" class="bust-check" id="bust-${p.origIndex}" />
         <span class="bust-text">Bust</span>
       </label>
       <input class="input score-input" type="number" min="0" max="999"
-             placeholder="Score" id="score-${i}" inputmode="numeric"
-             value="${prefill[i] !== undefined ? prefill[i] : ''}" />
+             placeholder="Score" id="score-${p.origIndex}" inputmode="numeric"
+             value="${prefill[p.origIndex] !== undefined ? prefill[p.origIndex] : ''}" />
     </div>
   `).join('');
 
