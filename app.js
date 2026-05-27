@@ -428,12 +428,17 @@ function renderGameOver() {
         <tbody>${rows}</tbody>
       </table>
       <div class="mt-24 text-center">
-        <button class="btn btn-primary btn-lg" id="new-game-btn">Play Again</button>
+        <p class="play-again-label">Play again?</p>
+        <div class="play-again-btns">
+          <button class="btn btn-primary" id="same-players-btn">Same Players</button>
+          <button class="btn btn-secondary" id="new-players-btn">New Players</button>
+        </div>
       </div>
     </div>
   `);
 
-  document.getElementById('new-game-btn').addEventListener('click', startNewGame);
+  document.getElementById('same-players-btn').addEventListener('click', samePlayersNewGame);
+  document.getElementById('new-players-btn').addEventListener('click', startNewGame);
   launchConfetti();
 }
 
@@ -478,6 +483,18 @@ function startNewGame() {
   state = null;
   stopConfetti();
   goToSetup();
+}
+
+function samePlayersNewGame() {
+  const names = state.players.map(p => p.name);
+  stopConfetti();
+  state = {
+    phase: 'scoring',
+    currentRound: 1,
+    players: names.map(name => ({ name, totalScore: 0, roundScores: [] }))
+  };
+  saveState(state);
+  renderScoring();
 }
 
 // ── Confetti ──────────────────────────────────────────────────────────────────

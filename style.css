@@ -547,6 +547,19 @@ h3 {
   color: var(--gold);
 }
 
+/* ── Play again ── */
+.play-again-label {
+  font-size: 1rem;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.play-again-btns {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
 /* ── Game over ── */
 .winner-hero {
   text-align: center;
