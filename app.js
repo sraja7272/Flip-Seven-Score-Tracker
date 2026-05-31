@@ -85,7 +85,7 @@ function renderSetup() {
   setApp(`
     <div class="card screen">
       <h2>Who's Playing?</h2>
-      <p class="text-muted mt-8">Add 2–10 players to get started.</p>
+      <p class="text-muted mt-8">Add 2–19 players to get started.</p>
       <div class="stack mt-24" id="player-list">
         ${rows.join('')}
       </div>
@@ -113,7 +113,7 @@ function playerRowHTML(index, value) {
 function addPlayerRow() {
   const list = document.getElementById('player-list');
   const count = list.querySelectorAll('.player-row').length;
-  if (count >= 10) return;
+  if (count >= 19) return;
   const div = document.createElement('div');
   div.innerHTML = playerRowHTML(count, '');
   list.appendChild(div.firstElementChild);
